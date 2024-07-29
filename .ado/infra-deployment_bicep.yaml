@@ -49,7 +49,7 @@ jobs:
           inlineScript: |
             az deployment sub validate \
               --location $(location) \
-              --parameters ./infra/main.bicepparam \
+              --template-file ./infra/main_kv.bicep \
               --parameters environmentName=$(environmentName) \
               --parameters location=$(location) \
               --parameters principalId=$(principalId)
@@ -68,7 +68,7 @@ jobs:
           inlineScript: |
             az deployment sub what-if \
               --location $(location) \
-              --parameters ./infra/main.bicepparam \
+              --template-file ./infra/main_kv.bicep \
               --parameters environmentName=$(environmentName) \
               --parameters location=$(location) \
               --parameters principalId=$(principalId) \
@@ -91,10 +91,10 @@ jobs:
             output=$(az deployment sub create \
               --name "COYDSA-$(Build.BuildId)" \
               --location $(location) \
-              --parameters ./infra/main.bicepparam \
+              --template-file ./infra/main_kv.bicep \
               --parameters environmentName=$(environmentName) \
               --parameters location=$(location) \
-              --parameters principalId=$(principalId) \
+              --parameters principalId=$(principalId)
               --only-show-errors )
             echo $output | jq .
             echo '====================================================================='
