@@ -73,7 +73,7 @@ jobs:
               --parameters ./infra/main.bicepparam \
               --parameters environmentName=$(environmentName) \
               --parameters location=$(location) \
-              --parameters principalId=$(principalId)
+              --parameters principalId=$(principalId) \
               --verbose
 
   - job: deploy
