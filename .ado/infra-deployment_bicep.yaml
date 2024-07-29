@@ -1,0 +1,121 @@
+# This workflow will deploy the infrastructure in ADO
+name: Infra_Deployment
+
+trigger: none
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+    - infra
+
+parameters:
+- name: teardownEnvironment
+  displayName: Teardown environment after successful deployment
+  type: boolean
+  default: false
+
+variables:
+  - group: "COYDSA-LZA-Infra"
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # The lint job performs linting on the bicep code
+  - job: lint
+    pool:
+      name: $(buildAgentPool)
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under so your job can access it
+      - checkout: self
+
+      # Runs the Bicep linter to ensure build is successful
+      - bash: az bicep build --file ./infra/main.bicep
+
+  - job: validate
+    pool:
+      name: $(buildAgentPool)
+    dependsOn: [lint]
+    steps:
+      - checkout: self
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: $(azureServiceConnection)
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+            az deployment sub validate \
+              --location $(location) \
+              --template-file ./infra/main.bicep \
+              --parameters ./infra/main.bicepparam \
+              --parameters environmentName=$(environmentName) \
+              --parameters location=$(location)
+
+  - job: preview
+    pool:
+      name: $(buildAgentPool)
+    dependsOn: [lint, validate]
+    steps:
+      - checkout: self
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: $(azureServiceConnection)
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+            az deployment sub what-if \
+              --location $(location) \
+              --template-file ./infra/main.bicep \
+              --parameters ./infra/main.bicepparam \
+              --parameters environmentName=$(environmentName) \
+              --parameters location=$(location) \
+              --verbose
+
+  - job: deploy
+    pool:
+      name: $(buildAgentPool)
+    dependsOn: [preview]
+    steps:
+      - checkout: self
+      - task: AzureCLI@2
+        name: deploy
+        inputs:
+          azureSubscription: $(azureServiceConnection)
+          scriptType: bash
+          scriptLocation: inlineScript
+          failOnStandardError: true
+          inlineScript: |
+            output=$(az deployment sub create \
+              --name "COYDSA-$(Build.BuildId)" \
+              --location $(location) \
+              --template-file ./infra/main.bicep \
+              --parameters ./infra/main.bicepparam \
+              --parameters environmentName=$(environmentName) \
+              --parameters location=$(location) \
+              --only-show-errors )
+            echo $output | jq .
+            echo '====================================================================='
+
+  - job: teardown
+    pool:
+      name: $(buildAgentPool)
+    variables:
+      spokeRG: "rg-$(environmentName)"
+    dependsOn: [deploy]
+    condition: and(succeeded(), ${{ eq(parameters.teardownEnvironment, 'true') }})
+
+    steps:
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          echo '====================================================================='
+          echo 'Deleting resource group: $(spokeRG) ...'
+          az group delete --name $(spokeRG) --yes
+          echo 'Deleting deployment: COYDSA-$(Build.BuildId) ...'
+          az deployment sub delete --name "COYDSA-$(Build.BuildId)" --no-wait
