@@ -1,0 +1,45 @@
+# This workflow will deploy the infrastructure in ADO
+name: CI_Frontend
+
+trigger: none
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+    - code/frontend/**
+
+variables:
+  - group: "COYDSA-LZA-Infra"
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # The lint job performs linting on the bicep code
+  - job: prepackage
+    pool:
+      name: $(buildAgentPool)
+    steps:
+      - checkout: self
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: $(azureServiceConnection)
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+            py -m venv .venv
+            .venv/scripts/activate
+            cd ./code
+            set -eou pipefail
+            mkdir -p dist
+            rm -rf dist/*
+            poetry install
+            poetry export -o dist/requirements.txt
+            cp *.py dist
+            cp -r backend dist
+            cd frontend
+            npm install
+            npm run build
+            cd ../dist
+            az webapp up --runtime PYTHON:3.11 --sku B3 --logs
