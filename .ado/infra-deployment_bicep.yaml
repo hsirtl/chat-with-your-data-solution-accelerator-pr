@@ -49,7 +49,8 @@ jobs:
           inlineScript: |
             az deployment sub validate \
               --location $(location) \
-              --template-file ./infra/main_kv.bicep \
+              --template-file ./infra/main.bicep \
+              --parameters ./infra/main.bicepparam \
               --parameters environmentName=$(environmentName) \
               --parameters location=$(location) \
               --parameters principalId=$(principalId)
@@ -68,10 +69,11 @@ jobs:
           inlineScript: |
             az deployment sub what-if \
               --location $(location) \
-              --template-file ./infra/main_kv.bicep \
+              --template-file ./infra/main.bicep \
+              --parameters ./infra/main.bicepparam \
               --parameters environmentName=$(environmentName) \
               --parameters location=$(location) \
-              --parameters principalId=$(principalId) \
+              --parameters principalId=$(principalId)
               --verbose
 
   - job: deploy
@@ -88,14 +90,14 @@ jobs:
           scriptLocation: inlineScript
           failOnStandardError: true
           inlineScript: |
-            az config set bicep.use_binary_from_path=False
             output=$(az deployment sub create \
               --name "COYDSA-$(Build.BuildId)" \
               --location $(location) \
-              --template-file ./infra/main_kv.bicep \
+              --template-file ./infra/main.bicep \
+              --parameters ./infra/main.bicepparam \
               --parameters environmentName=$(environmentName) \
               --parameters location=$(location) \
-              --parameters principalId=$(principalId)
+              --parameters principalId=$(principalId) \
               --only-show-errors )
             echo $output | jq .
             echo '====================================================================='
