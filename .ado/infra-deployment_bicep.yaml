@@ -90,6 +90,7 @@ jobs:
           scriptLocation: inlineScript
           failOnStandardError: false
           inlineScript: |
+            az provider register --namespace Microsoft.AlertsManagement
             output=$(az deployment sub create \
               --name "COYDSA-$(Build.BuildId)" \
               --location $(location) \
