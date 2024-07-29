@@ -88,6 +88,7 @@ jobs:
           scriptLocation: inlineScript
           failOnStandardError: true
           inlineScript: |
+            az config set bicep.use_binary_from_path=False
             output=$(az deployment sub create \
               --name "COYDSA-$(Build.BuildId)" \
               --location $(location) \
