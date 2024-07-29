@@ -52,7 +52,8 @@ jobs:
               --template-file ./infra/main.bicep \
               --parameters ./infra/main.bicepparam \
               --parameters environmentName=$(environmentName) \
-              --parameters location=$(location)
+              --parameters location=$(location) \
+              --parameters principalId=$(principalId)
 
   - job: preview
     pool:
@@ -72,6 +73,7 @@ jobs:
               --parameters ./infra/main.bicepparam \
               --parameters environmentName=$(environmentName) \
               --parameters location=$(location) \
+              --parameters principalId=$(principalId) \
               --verbose
 
   - job: deploy
@@ -95,6 +97,7 @@ jobs:
               --parameters ./infra/main.bicepparam \
               --parameters environmentName=$(environmentName) \
               --parameters location=$(location) \
+              --parameters principalId=$(principalId) \
               --only-show-errors )
             echo $output | jq .
             echo '====================================================================='
