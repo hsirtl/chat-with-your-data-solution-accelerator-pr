@@ -24,6 +24,8 @@ variables:
     value: '$(Build.SourcesDirectory)/docker/Frontend.Dockerfile'
   - name: 'tag'
     value: '$(Build.BuildId)'
+  - name: 'appName'
+    value: 'web-2qc35pzaip4h2-docker'
 
 stages:
 - stage: Build
@@ -47,3 +49,9 @@ stages:
           docker build --file $(dockerfilePath) --tag $(containerRegistry).azurecr.io/$(imageRepository):$(tag) $(Build.SourcesDirectory)
           echo "Pushing the image to ACR..."
           docker push $(containerRegistry).azurecr.io/$(imageRepository):$(tag)
+    - task: AzureWebAppContainer@1
+      displayName: 'Azure Web App on Container Deploy'
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        appName: $(appName)
+        containers: $(containerRegistry).azurecr.io/$(imageRepository):$(tag)
