@@ -19,7 +19,7 @@ variables:
   - name: 'imageRepository'
     value: 'rag-webapp'
   - name: 'containerRegistry'
-    value: 'acr2qc35pzaip4h2.azurecr.io'
+    value: 'acr2qc35pzaip4h2'
   - name: 'dockerfilePath'
     value: '$(Build.SourcesDirectory)/docker/Frontend.Dockerfile'
   - name: 'tag'
@@ -43,3 +43,5 @@ stages:
         inlineScript: |
           echo "Logging in to ACR..."
           az acr login --name $(containerRegistry)
+          docker build --file $(dockerfilePath) --tag $(imageRepository):$(tag) $(Build.SourcesDirectory)
+          docker push $(containerRegistry).azurecr.io/$(imageRepository):$(tag)
