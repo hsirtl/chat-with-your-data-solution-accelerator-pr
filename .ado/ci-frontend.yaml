@@ -28,6 +28,10 @@ jobs:
           scriptType: bash
           scriptLocation: inlineScript
           inlineScript: |
+            echo "Prepackage frontend"
+            echo "========================================"
+            whoami
+            echo "========================================"
             python3.12 -m venv .venv
             source .venv/bin/activate
             cd ./code
