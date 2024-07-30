@@ -35,7 +35,7 @@ jobs:
             echo "Current PATH setting:"
             echo $PATH
             echo "========================================"
-            python3.12 -m venv .venv
+            python3.11 -m venv .venv
             source .venv/bin/activate
             cd ./code
             set -eou pipefail
@@ -48,4 +48,4 @@ jobs:
             npm install
             npm run build
             cd ../dist
-            az webapp up --runtime PYTHON:3.11 --sku B3 --logs
+            az webapp up --runtime PYTHON:3.11 --sku B3 --logs --name web-2qc35pzaip4h2 --location $(location)
