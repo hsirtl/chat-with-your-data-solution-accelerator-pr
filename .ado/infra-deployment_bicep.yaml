@@ -18,6 +18,8 @@ parameters:
   default: false
 
 variables:
+  - name: hostingModel
+    value: "container"
   - group: "COYDSA-LZA-Infra"
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -53,7 +55,8 @@ jobs:
               --parameters ./infra/main.bicepparam \
               --parameters environmentName=$(environmentName) \
               --parameters location=$(location) \
-              --parameters principalId=$(principalId)
+              --parameters principalId=$(principalId) \
+              --parameters hostingModel=$(hostingModel)
 
   - job: preview
     pool:
@@ -74,6 +77,7 @@ jobs:
               --parameters environmentName=$(environmentName) \
               --parameters location=$(location) \
               --parameters principalId=$(principalId) \
+              --parameters hostingModel=$(hostingModel) \
               --verbose
 
   - job: deploy
@@ -99,6 +103,7 @@ jobs:
               --parameters environmentName=$(environmentName) \
               --parameters location=$(location) \
               --parameters principalId=$(principalId) \
+              --parameters hostingModel=$(hostingModel) \
               --only-show-errors )
             echo $output | jq .
             echo '====================================================================='
