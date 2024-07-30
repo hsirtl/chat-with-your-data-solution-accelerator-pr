@@ -14,11 +14,16 @@ pr:
 variables:
   - group: "COYDSA-LZA-Infra"
   # Container registry service connection established during pipeline creation
-  - dockerRegistryServiceConnection: 'Contoso-HS.COYD.ACR'
-  - imageRepository: 'rag-webapp'
-  - containerRegistry: 'acr2qc35pzaip4h2.azurecr.io'
-  - dockerfilePath: '$(Build.SourcesDirectory)/docker/Frontend.Dockerfile'
-  - tag: '$(Build.BuildId)'
+  - name: 'dockerRegistryServiceConnection'
+    value: 'Contoso-HS.COYD.ACR'
+  - name: 'imageRepository'
+    value: 'rag-webapp'
+  - name: 'containerRegistry'
+    value: 'acr2qc35pzaip4h2.azurecr.io'
+  - name: 'dockerfilePath'
+    value: '$(Build.SourcesDirectory)/docker/Frontend.Dockerfile'
+  - name: 'tag'
+    value: '$(Build.BuildId)'
 
 stages:
 - stage: Build
