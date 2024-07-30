@@ -28,13 +28,12 @@ jobs:
           scriptType: bash
           scriptLocation: inlineScript
           inlineScript: |
-            py -m venv .venv
-            .venv/scripts/activate
+            python3.12 -m venv .venv
+            source .venv/bin/activate
             cd ./code
             set -eou pipefail
             mkdir -p dist
             rm -rf dist/*
-            poetry install
             poetry export -o dist/requirements.txt
             cp *.py dist
             cp -r backend dist
