@@ -13,39 +13,28 @@ pr:
 
 variables:
   - group: "COYDSA-LZA-Infra"
+  # Container registry service connection established during pipeline creation
+  - dockerRegistryServiceConnection: 'Contoso-HS.COYD.ACR'
+  - imageRepository: 'rag-webapp'
+  - containerRegistry: 'acr2qc35pzaip4h2.azurecr.io'
+  - dockerfilePath: '$(Build.SourcesDirectory)/docker/Frontend.Dockerfile'
+  - tag: '$(Build.BuildId)'
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
-jobs:
-  # The lint job performs linting on the bicep code
-  - job: prepackage
+stages:
+- stage: Build
+  displayName: Build and push stage
+  jobs:
+  - job: Build
+    displayName: Build
     pool:
       name: $(buildAgentPool)
     steps:
-      - checkout: self
-      - task: AzureCLI@2
-        inputs:
-          azureSubscription: $(azureServiceConnection)
-          scriptType: bash
-          scriptLocation: inlineScript
-          inlineScript: |
-            echo "Prepackage frontend"
-            echo "========================================"
-            echo "Current user:"
-            whoami
-            echo "Current PATH setting:"
-            echo $PATH
-            echo "========================================"
-            python3.11 -m venv .venv
-            source .venv/bin/activate
-            cd ./code
-            set -eou pipefail
-            mkdir -p dist
-            rm -rf dist/*
-            poetry export -o dist/requirements.txt
-            cp *.py dist
-            cp -r backend dist
-            cd frontend
-            npm install
-            npm run build
-            cd ../dist
-            az webapp up --runtime PYTHON:3.11 --sku B3 --logs --name web-2qc35pzaip4h2 --location $(location)
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(tag)
