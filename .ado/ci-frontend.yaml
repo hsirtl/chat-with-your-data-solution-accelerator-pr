@@ -30,7 +30,10 @@ jobs:
           inlineScript: |
             echo "Prepackage frontend"
             echo "========================================"
+            echo "Current user:"
             whoami
+            echo "Current PATH setting:"
+            echo $PATH
             echo "========================================"
             python3.12 -m venv .venv
             source .venv/bin/activate
