@@ -43,5 +43,7 @@ stages:
         inlineScript: |
           echo "Logging in to ACR..."
           az acr login --name $(containerRegistry)
+          echo "Building a new image..."
           docker build --file $(dockerfilePath) --tag $(imageRepository):$(tag) $(Build.SourcesDirectory)
+          echo "Pushing the image to ACR..."
           docker push $(containerRegistry).azurecr.io/$(imageRepository):$(tag)
