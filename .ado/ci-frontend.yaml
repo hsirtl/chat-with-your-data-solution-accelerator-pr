@@ -34,12 +34,12 @@ stages:
     pool:
       name: $(buildAgentPool)
     steps:
-    - task: Docker@2
+    - task: AzureCLI@2
       displayName: Build and push an image to container registry
       inputs:
-        command: buildAndPush
-        repository: $(imageRepository)
-        dockerfile: $(dockerfilePath)
-        containerRegistry: $(dockerRegistryServiceConnection)
-        tags: |
-          $(tag)
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          echo "Logging in to ACR..."
+          az acr login --name $(containerRegistry)
