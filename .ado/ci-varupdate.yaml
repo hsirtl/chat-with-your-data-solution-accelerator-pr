@@ -31,3 +31,4 @@ stages:
         scriptLocation: inlineScript
         inlineScript: |
           echo "Updating variable..."
+          echo  $(variableGroupPAT) | az devops login --organization https://dev.azure.com/hsirtl
