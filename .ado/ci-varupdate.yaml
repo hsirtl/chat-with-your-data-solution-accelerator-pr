@@ -1,0 +1,33 @@
+# This workflow will deploy the infrastructure in ADO
+name: CI_Frontend
+
+trigger: none
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+    - code/frontend/**
+
+variables:
+  - group: "COYDSA-LZA-Infra"
+
+stages:
+- stage: Update
+  displayName: Update Variable
+  jobs:
+  - job: Update
+    displayName: Update Variable
+    pool:
+      name: $(buildAgentPool)
+    steps:
+    - task: AzureCLI@2
+      displayName: Update Variable
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          echo "Updating variable..."
