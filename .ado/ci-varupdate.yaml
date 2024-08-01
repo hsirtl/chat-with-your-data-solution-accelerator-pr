@@ -33,5 +33,5 @@ stages:
           echo "Updating variable..."
           echo  $(variableGroupPAT) | az devops login --organization https://dev.azure.com/hsirtl
           $group_id = $(az pipelines variable-group list --org 'https://dev.azure.com/hsirtl' --project "COYD Solution Accelerator Demo" --group-name "COYDSA-LZA-Infra" --query '[0].id' -o json)
-          az pipelines variable-group variable update --org 'https://dev.azure.com/hsirtl' --project "COYD Solution Accelerator Demo" --group-id $group_id --name "testvar" --value "testvalue1"
+          az pipelines variable-group variable update --org 'https://dev.azure.com/hsirtl' --project "COYD Solution Accelerator Demo" --group-id "$group_id" --name "testvar" --value "testvalue1"
           az devops logout
