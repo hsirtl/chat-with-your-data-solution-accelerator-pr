@@ -32,5 +32,5 @@ stages:
         inlineScript: |
           echo "Updating variable..."
           echo  $(variableGroupPAT) | az devops login --organization https://dev.azure.com/hsirtl
-          az pipelines variable-group variable --org 'https://dev.azure.com/hsirtl/' --project "COYD Solution Accelerator Demo" --group-id "COYDSA-LZA-Infra" --name "testvar" --value "testvalue1"
+          az pipelines variable-group variable --org 'hsirtl' --project "COYD Solution Accelerator Demo" --group-id "COYDSA-LZA-Infra" --name "testvar" --value "testvalue1"
           az devops logout
