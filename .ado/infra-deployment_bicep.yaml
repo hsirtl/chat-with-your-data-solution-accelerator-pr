@@ -111,10 +111,10 @@ jobs:
               --only-show-errors )
             echo $output | jq .
             echo '====================================================================='
-            frontendWebsiteName=$(echo $output | jq -r '.properties.outputs.FRONTEND_WEBSITE_NAME.value')
+            frontendWebsiteName=$(echo $output | jq -r 'to_entries | map({key: .key | ascii_downcase, value: .value}) | from_entries | .properties.outputs.frontend_website_name.value')
             echo "Frontend website name: $frontendWebsiteName"
             echo "##vso[task.setvariable variable=frontendWebsiteName;isOutput=true]$frontendWebsiteName"
-            adminWebsiteName=$(echo $output | jq -r '.properties.outputs.ADMIN_WEBSITE_NAME.value')
+            adminWebsiteName=$(echo $output | jq -r 'to_entries | map({key: .key | ascii_downcase, value: .value}) | from_entries | .properties.outputs.admin_website_name.value')
             echo "Admin website name: $adminWebsiteName"
             echo "##vso[task.setvariable variable=adminWebsiteName;isOutput=true]$adminWebsiteName"
 
