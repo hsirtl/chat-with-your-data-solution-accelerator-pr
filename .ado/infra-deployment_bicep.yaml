@@ -12,6 +12,10 @@ pr:
     - infra
 
 parameters:
+- name: updatePipelineVariables
+  displayName: Update Pipeline Variables to reference deployed resources
+  type: boolean
+  default: true
 - name: teardownEnvironment
   displayName: Teardown environment after successful deployment
   type: boolean
@@ -81,6 +85,7 @@ jobs:
               --verbose
 
   - job: deploy
+    name: deploy
     pool:
       name: $(buildAgentPool)
     dependsOn: [preview]
@@ -107,6 +112,51 @@ jobs:
               --only-show-errors )
             echo $output | jq .
             echo '====================================================================='
+            frontendWebsiteName=$(echo $output | jq -r '.properties.outputs.FRONTEND_WEBSITE_NAME.value')
+            echo "Frontend website name: $frontendWebsiteName"
+            echo "##vso[task.setvariable variable=frontendWebsiteName;isOutput=true]$frontendWebsiteName"
+            adminWebsiteName=$(echo $output | jq -r '.properties.outputs.ADMIN_WEBSITE_NAME.value')
+            echo "Admin website name: $adminWebsiteName"
+            echo "##vso[task.setvariable variable=adminWebsiteName;isOutput=true]$adminWebsiteName"
+
+  - job: updatePipelineVariables
+    name: updatePipelineVariables
+    pool:
+      name: $(buildAgentPool)
+    dependsOn: [deploy]
+    variables:
+      frontendWebsiteName: $[ dependencies.deploy.outputs['deploy.frontendWebsiteName'] ]
+      adminWebsiteName: $[ dependencies.deploy.outputs['deploy.adminWebsiteName'] ]
+    condition: and(succeeded(), ${{ eq(parameters.updatePipelineVariables, 'true') }})
+    steps:
+      - task: AzureCLI@2
+        name: updatePipelineVariables
+        displayName: Update Pipeline Variables
+        inputs:
+          azureSubscription: $(azureServiceConnection)
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+            echo "Updating pipeline variables..."
+            echo  $(variableGroupPAT) | az devops login --organization $(variableGroupOrg)
+            group_id=$(az pipelines variable-group list \
+              --org "$(variableGroupOrg)" \
+              --project "$(variableGroupProject)" \
+              --group-name "$(variableGroupName)" \
+              --query '[0].id' -o json)
+            az pipelines variable-group variable update \
+              --org "$(variableGroupOrg)" \
+              --project "$(variableGroupProject)" \
+              --group-id $group_id \
+              --name "frontendWebsiteName" \
+              --value "$(frontendWebsiteName)"
+            az pipelines variable-group variable update \
+              --org "$(variableGroupOrg)" \
+              --project "$(variableGroupProject)" \
+              --group-id $group_id \
+              --name "adminWebsiteName" \
+              --value "$(adminWebsiteName)"
+            az devops logout
 
   - job: teardown
     pool:
