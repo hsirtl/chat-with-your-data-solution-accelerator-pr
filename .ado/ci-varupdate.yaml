@@ -31,16 +31,16 @@ stages:
         scriptLocation: inlineScript
         inlineScript: |
           echo "Updating variable..."
-          echo  $(variableGroupPAT) | az devops login --organization https://dev.azure.com/hsirtl
+          echo  $(variableGroupPAT) | az devops login --organization $(variableGroupOrg)
           group_id=$(az pipelines variable-group list \
-            --org 'https://dev.azure.com/hsirtl' \
-            --project "COYD Solution Accelerator Demo" \
-            --group-name "COYDSA-LZA-Infra" \
+            --org $(variableGroupOrg) \
+            --project $(variableGroupProject) \
+            --group-name $(variableGroupName) \
             --query '[0].id' -o json)
           az pipelines variable-group variable update \
-            --org 'https://dev.azure.com/hsirtl' \
-            --project "COYD Solution Accelerator Demo" \
+            --org $(variableGroupOrg) \
+            --project $(variableGroupProject) \
             --group-id $group_id \
             --name "testvar" \
-            --value "testvalue2"
+            --value "testvalue3"
           az devops logout
