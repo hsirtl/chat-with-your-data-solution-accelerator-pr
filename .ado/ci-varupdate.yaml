@@ -33,13 +33,13 @@ stages:
           echo "Updating variable..."
           echo  $(variableGroupPAT) | az devops login --organization $(variableGroupOrg)
           group_id=$(az pipelines variable-group list \
-            --org $(variableGroupOrg) \
-            --project $(variableGroupProject) \
-            --group-name $(variableGroupName) \
+            --org "$(variableGroupOrg)" \
+            --project "$(variableGroupProject)" \
+            --group-name "$(variableGroupName)" \
             --query '[0].id' -o json)
           az pipelines variable-group variable update \
-            --org $(variableGroupOrg) \
-            --project $(variableGroupProject) \
+            --org "$(variableGroupOrg)" \
+            --project "$(variableGroupProject)" \
             --group-id $group_id \
             --name "testvar" \
             --value "testvalue4"
