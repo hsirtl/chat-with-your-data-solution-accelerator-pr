@@ -42,5 +42,5 @@ stages:
             --project $(variableGroupProject) \
             --group-id $group_id \
             --name "testvar" \
-            --value "testvalue3"
+            --value "testvalue4"
           az devops logout
