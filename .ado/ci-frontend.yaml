@@ -14,18 +14,12 @@ pr:
 variables:
   - group: "COYDSA-LZA-Infra"
   # Container registry service connection established during pipeline creation
-  - name: 'dockerRegistryServiceConnection'
-    value: 'Contoso-HS.COYD.ACR'
-  - name: 'imageRepository'
-    value: 'rag-webapp'
   - name: 'containerRegistry'
     value: 'acr2qc35pzaip4h2'
   - name: 'dockerfilePath'
     value: '$(Build.SourcesDirectory)/docker/Frontend.Dockerfile'
   - name: 'tag'
     value: '$(Build.BuildId)'
-  - name: 'appName'
-    value: 'web-2qc35pzaip4h2-docker'
 
 stages:
 - stage: Build
@@ -46,12 +40,12 @@ stages:
           echo "Logging in to ACR..."
           az acr login --name $(containerRegistry)
           echo "Building a new image..."
-          docker build --file $(dockerfilePath) --tag $(containerRegistry).azurecr.io/$(imageRepository):$(tag) $(Build.SourcesDirectory)
+          docker build --file $(dockerfilePath) --tag $(containerRegistry).azurecr.io/$(frontendWebsiteName):$(tag) $(Build.SourcesDirectory)
           echo "Pushing the image to ACR..."
           docker push $(containerRegistry).azurecr.io/$(imageRepository):$(tag)
     - task: AzureWebAppContainer@1
       displayName: 'Azure Web App on Container Deploy'
       inputs:
         azureSubscription: $(azureServiceConnection)
-        appName: $(appName)
+        appName: $(frontendWebsiteName)
         containers: $(containerRegistry).azurecr.io/$(imageRepository):$(tag)
