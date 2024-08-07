@@ -29,6 +29,7 @@ param authType string
 param dockerFullImageName string = ''
 param useDocker bool = dockerFullImageName != ''
 param healthCheckPath string = ''
+param containerRegistryName string = ''
 
 module web '../core/host/appservice.bicep' = {
   name: '${name}-app-module'
@@ -129,6 +130,16 @@ module web '../core/host/appservice.bicep' = {
     healthCheckPath: healthCheckPath
   }
 }
+
+// Container Registry pull permission
+module acrPull '../core/security/registry-access.bicep' = if ((authType == 'rbac') && (useDocker)) {
+  name: 'acrpull-role-web'
+  params: {
+    principalId: web.outputs.identityPrincipalId
+    containerRegistryName: containerRegistryName
+  }
+}
+
 
 // Storage Blob Data Contributor
 module storageBlobRoleWeb '../core/security/role.bicep' = if (authType == 'rbac') {

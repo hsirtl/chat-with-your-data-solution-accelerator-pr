@@ -10,6 +10,9 @@ param resourceToken string = toLower(uniqueString(subscription().id, environment
 @description('Location for all resources.')
 param location string
 
+@description('Name of Azure Container Registry.')
+param containerRegistryName string = 'acr${resourceToken}'
+
 @description('Name of App Service plan')
 param hostingPlanName string = 'hosting-plan-${resourceToken}'
 
@@ -483,6 +486,22 @@ module search './core/search/search-services.bicep' = {
   }
 }
 
+module containerRegistry './core/acr/containerregistry.bicep' = {
+  name: containerRegistryName
+  scope: rg
+  params: {
+    location: location
+    tags: tags
+    name: containerRegistryName
+    acrSku: 'Basic'
+    zoneRedundancy: 'Disabled'
+    acrAdminUserEnabled: false
+    publicNetworkAccess: 'Disabled'
+    networkRuleBypassOptions: 'AzureServices'
+    diagnosticWorkspaceId: ''
+  }
+}
+
 module hostingplan './core/host/appserviceplan.bicep' = {
   name: hostingPlanName
   scope: rg
@@ -584,6 +603,7 @@ module web_docker './app/web.bicep' = if (hostingModel == 'container') {
     location: location
     tags: union(tags, { 'azd-service-name': 'web-docker' })
     dockerFullImageName: 'fruoccopublic.azurecr.io/rag-webapp'
+    containerRegistryName: containerRegistry.outputs.name
     appServicePlanId: hostingplan.outputs.name
     applicationInsightsName: monitoring.outputs.applicationInsightsName
     healthCheckPath: '/api/health'
