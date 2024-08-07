@@ -132,7 +132,8 @@ module web '../core/host/appservice.bicep' = {
 }
 
 // Container Registry pull permission
-module acrPull '../core/security/registry-access.bicep' = if ((authType == 'rbac') && (useDocker)) {
+// module acrPull '../core/security/registry-access.bicep' = if ((authType == 'rbac') && (useDocker)) {
+module acrPull '../core/security/registry-access.bicep' = if (useDocker) {
   name: 'acrpull-role-web'
   params: {
     principalId: web.outputs.identityPrincipalId
