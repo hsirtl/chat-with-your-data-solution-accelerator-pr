@@ -117,6 +117,10 @@ jobs:
             adminWebsiteName=$(echo ${output,,} | jq -r '.properties.outputs.admin_website_name.value')
             echo "Admin website name: $adminWebsiteName"
             echo "##vso[task.setvariable variable=adminWebsiteName;isOutput=true]$adminWebsiteName"
+            backendFunctionName=$(echo ${output,,} | jq -r '.properties.outputs.backend_function_name.value')
+            echo "Backend function name: $backendFunctionName"
+            echo "##vso[task.setvariable variable=backendFunctionName;isOutput=true]$backendFunctionName"
+
 
   - job: updatePipelineVariables
     pool:

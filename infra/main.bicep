@@ -1126,7 +1126,7 @@ output AZURE_FORM_RECOGNIZER_ENDPOINT string = formrecognizer.outputs.endpoint
 output AZURE_FORM_RECOGNIZER_KEY string = useKeyVault ? storekeys.outputs.FORM_RECOGNIZER_KEY_NAME : ''
 output AZURE_KEY_VAULT_ENDPOINT string = useKeyVault ? keyvault.outputs.endpoint : ''
 output AZURE_KEY_VAULT_NAME string = useKeyVault || authType == 'rbac' ? keyvault.outputs.name : ''
-output AZURE_LOCATION string = location
+//output AZURE_LOCATION string = location
 output AZURE_OPENAI_MODEL_NAME string = azureOpenAIModelName
 output AZURE_OPENAI_MODEL_VERSION string = azureOpenAIModelVersion
 output AZURE_OPENAI_STREAM string = azureOpenAIStream
@@ -1172,6 +1172,9 @@ output FRONTEND_WEBSITE_NAME string = hostingModel == 'code'
 output ADMIN_WEBSITE_NAME string = hostingModel == 'code'
   ? adminweb.outputs.WEBSITE_ADMIN_NAME
   : adminweb_docker.outputs.WEBSITE_ADMIN_NAME
+output BACKEND_FUNCTION_NAME string = hostingModel == 'code'
+  ? function.outputs.functionName
+  : function_docker.outputs.functionName
 output LOGLEVEL string = logLevel
 output CONVERSATION_FLOW string = conversationFlow
 output USE_ADVANCED_IMAGE_PROCESSING bool = useAdvancedImageProcessing
