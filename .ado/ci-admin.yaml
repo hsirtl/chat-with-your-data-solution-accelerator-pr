@@ -1,0 +1,51 @@
+# This workflow will deploy the infrastructure in ADO
+name: CI_Admin
+
+trigger: none
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+    - code/backend/**
+
+variables:
+  - group: "COYDSA-LZA-Infra"
+  # Container registry service connection established during pipeline creation
+  - name: 'containerRegistry'
+    value: 'acr2qc35pzaip4h2'
+  - name: 'dockerfilePath'
+    value: '$(Build.SourcesDirectory)/docker/Admin.Dockerfile'
+  - name: 'tag'
+    value: '$(Build.BuildId)'
+
+stages:
+- stage: Build
+  displayName: Build and push stage
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      name: $(buildAgentPool)
+    steps:
+    - task: AzureCLI@2
+      displayName: Build and push an image to container registry
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          echo "Logging in to ACR..."
+          az acr login --name $(containerRegistry)
+          echo "Building a new image..."
+          docker build --file $(dockerfilePath) --tag $(containerRegistry).azurecr.io/$(adminWebsiteName):$(tag) $(Build.SourcesDirectory)
+          echo "Pushing the image to ACR..."
+          docker push $(containerRegistry).azurecr.io/$(adminWebsiteName):$(tag)
+    - task: AzureWebAppContainer@1
+      displayName: 'Azure Web App on Container Deploy'
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        appName: $(adminWebsiteName)
+        containers: $(containerRegistry).azurecr.io/$(adminWebsiteName):$(tag)
