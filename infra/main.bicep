@@ -757,6 +757,7 @@ module adminweb_docker './app/adminweb.bicep' = if (hostingModel == 'container')
     location: location
     tags: union(tags, { 'azd-service-name': 'adminweb-docker' })
     dockerFullImageName: 'fruoccopublic.azurecr.io/rag-adminwebapp'
+    containerRegistryName: containerRegistry.outputs.name
     appServicePlanId: hostingplan.outputs.name
     applicationInsightsName: monitoring.outputs.applicationInsightsName
     azureOpenAIName: openai.outputs.name

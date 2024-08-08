@@ -31,6 +31,7 @@ param useDocker bool = dockerFullImageName != ''
 param healthCheckPath string = ''
 param containerRegistryName string = ''
 
+
 module web '../core/host/appservice.bicep' = {
   name: '${name}-app-module'
   params: {

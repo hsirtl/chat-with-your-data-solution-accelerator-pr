@@ -28,6 +28,8 @@ param speechKeyName string = ''
 param authType string
 param dockerFullImageName string = ''
 param useDocker bool = dockerFullImageName != ''
+param containerRegistryName string = ''
+
 
 module adminweb '../core/host/appservice.bicep' = {
   name: '${name}-app-module'
@@ -125,6 +127,16 @@ module adminweb '../core/host/appservice.bicep' = {
             '2023-05-01'
           ).key1
     })
+  }
+}
+
+// Container Registry pull permission
+// module acrPull '../core/security/registry-access.bicep' = if ((authType == 'rbac') && (useDocker)) {
+module acrPull '../core/security/registry-access.bicep' = if (useDocker) {
+  name: 'acrpull-role-admin'
+  params: {
+    principalId: adminweb.outputs.identityPrincipalId
+    containerRegistryName: containerRegistryName
   }
 }
 
