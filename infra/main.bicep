@@ -927,6 +927,7 @@ module function_docker './app/function.bicep' = if (hostingModel == 'container')
     location: location
     tags: union(tags, { 'azd-service-name': 'function-docker' })
     dockerFullImageName: 'fruoccopublic.azurecr.io/rag-backend'
+    containerRegistryName: containerRegistry.outputs.name
     appServicePlanId: hostingplan.outputs.name
     applicationInsightsName: monitoring.outputs.applicationInsightsName
     azureOpenAIName: openai.outputs.name

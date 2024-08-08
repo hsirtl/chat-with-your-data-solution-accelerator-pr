@@ -27,6 +27,9 @@ param contentSafetyKeyName string = ''
 param speechKeyName string = ''
 param authType string
 param dockerFullImageName string = ''
+param useDocker bool = dockerFullImageName != ''
+param containerRegistryName string = ''
+
 
 module function '../core/host/functions.bicep' = {
   name: '${name}-app-module'
@@ -151,6 +154,16 @@ resource waitFunctionDeploymentSection 'Microsoft.Resources/deploymentScripts@20
   dependsOn: [
     function
   ]
+}
+
+// Container Registry pull permission
+// module acrPull '../core/security/registry-access.bicep' = if ((authType == 'rbac') && (useDocker)) {
+module acrPull '../core/security/registry-access.bicep' = if (useDocker) {
+  name: 'acrpull-role-function'
+  params: {
+    principalId: function.outputs.identityPrincipalId
+    containerRegistryName: containerRegistryName
+  }
 }
 
 // Cognitive Services User
