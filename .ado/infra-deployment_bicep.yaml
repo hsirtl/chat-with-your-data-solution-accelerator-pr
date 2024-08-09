@@ -129,6 +129,7 @@ jobs:
     variables:
       frontendWebsiteName: $[ dependencies.deploy.outputs['deploy.frontendWebsiteName'] ]
       adminWebsiteName: $[ dependencies.deploy.outputs['deploy.adminWebsiteName'] ]
+      backendFunctionName: $[ dependencies.deploy.outputs['deploy.backendFunctionName'] ]
     condition: and(succeeded(), ${{ eq(parameters.updatePipelineVariables, 'true') }})
     steps:
       - task: AzureCLI@2
@@ -158,6 +159,12 @@ jobs:
               --group-id $group_id \
               --name "adminWebsiteName" \
               --value "$(adminWebsiteName)"
+            az pipelines variable-group variable update \
+              --org "$(variableGroupOrg)" \
+              --project "$(variableGroupProject)" \
+              --group-id $group_id \
+              --name "backendFunctionName" \
+              --value "$(backendFunctionName)"
             az devops logout
 
   - job: teardown
