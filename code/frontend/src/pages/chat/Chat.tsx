@@ -25,9 +25,11 @@ import {
   Citation,
   ToolMessageContent,
   ChatResponse,
+  getAssistantTypeApi,
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
+import Cards from "./Cards_contract/Cards";
 
 const Chat = () => {
   const lastQuestionRef = useRef<string>("");
@@ -57,6 +59,10 @@ const Chat = () => {
   const [isRecognizing, setIsRecognizing] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const recognizerRef = useRef<SpeechRecognizer | null>(null);
+  const [assistantType, setAssistantType] = useState("");
+  const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null);
+  const [isTextToSpeachActive , setIsTextToSpeachActive] = useState(false);
+
   const makeApiRequest = async (question: string) => {
     lastQuestionRef.current = question;
 
@@ -134,9 +140,9 @@ const Chat = () => {
 
     return abortController.abort();
   };
-    // Buffer to store recognized text
-    let recognizedTextBuffer = "";
-    let currentSentence = "";
+  // Buffer to store recognized text
+  let recognizedTextBuffer = "";
+  let currentSentence = "";
 
   const startSpeechRecognition = async () => {
     if (!isRecognizing) {
@@ -148,26 +154,26 @@ const Chat = () => {
           let recognizedText = e.result.text.trim();
           // Append current sentence to buffer if it's not empty
           if (currentSentence) {
-              recognizedTextBuffer += ` ${currentSentence.trim()}`;
-              currentSentence = "";
+            recognizedTextBuffer += ` ${currentSentence.trim()}`;
+            currentSentence = "";
           }
           // Start new sentence
           currentSentence += ` ${recognizedText}`;
           //set text in textarea
-           setUserMessage((recognizedTextBuffer + currentSentence).trim());
-           setRecognizedText((recognizedTextBuffer + currentSentence).trim());
+          setUserMessage((recognizedTextBuffer + currentSentence).trim());
+          setRecognizedText((recognizedTextBuffer + currentSentence).trim());
         }
       };
 
       recognizerRef.current.startContinuousRecognitionAsync(
         () => {
-            setIsRecognizing(true);
-            setIsListening(true);
+          setIsRecognizing(true);
+          setIsListening(true);
         },
         error => {
-            console.error(`Error starting recognition: ${error}`);
+          console.error(`Error starting recognition: ${error}`);
         }
-    );
+      );
     }
   };
 
@@ -188,6 +194,9 @@ const Chat = () => {
   };
 
   const onMicrophoneClick = async () => {
+    // clear the previous text
+    setUserMessage("");
+    setRecognizedText("");
     if (!isRecognizing) {
       setSendButtonDisabled(true);
       await startSpeechRecognition();
@@ -211,7 +220,22 @@ const Chat = () => {
   };
 
   useEffect(
-    () => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }),
+    () => {
+      chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" })
+      const fetchAssistantType = async () => {
+        try {
+          const result = await getAssistantTypeApi();
+          if (result) {
+            setAssistantType(result.ai_assistant_type);
+          }
+          return result;
+        } catch (error) {
+          console.error('Error fetching assistant type:', error);
+        }
+      };
+      fetchAssistantType();
+    },
+
     [showLoadingMessage]
   );
 
@@ -239,17 +263,38 @@ const Chat = () => {
     return [];
   };
 
+  const handleSpeech = (index: number, status : string) => {
+    if(status != 'pause')
+    setActiveCardIndex(index);
+    setIsTextToSpeachActive(status =='speak' ? true : false)
+  };
+
+
   return (
     <div className={styles.container}>
-      <Stack horizontal className={styles.chatRoot}>
+      <Stack horizontal className={styles.chatRoot} >
+
         <div className={`${styles.chatContainer} ${styles.MobileChatContainer}`}>
           {!lastQuestionRef.current ? (
             <Stack className={styles.chatEmptyState}>
-              <img src={Azure} className={styles.chatIcon} aria-hidden="true" alt="Azure AI logo"/>
-              <h1 className={styles.chatEmptyStateTitle}>Start chatting</h1>
-              <h2 className={styles.chatEmptyStateSubtitle}>
-                This chatbot is configured to answer your questions
-              </h2>
+              <img src={Azure} className={styles.chatIcon} aria-hidden="true" alt="Azure AI logo" />
+              {assistantType === 'contract assistant' ? (
+                <>
+                  <h1 className={styles.chatEmptyStateTitle}>Contract Summarizer</h1>
+                  <h2 className={styles.chatEmptyStateSubtitle}>AI-Powered assistant for simplified summarization</h2>
+                  <Cards />
+                </>
+              ) : assistantType === 'default' ? (
+                <>
+                  <h1 className={styles.chatEmptyStateTitle}>Start chatting</h1>
+                  <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is configured to answer your questions</h2>
+                </>
+              ) : <div className={styles.loadingContainer}>
+                <div className={styles.loadingIcon}></div>
+                <p>Loading...</p>
+              </div>}
+
+
             </Stack>
           ) : (
             <div
@@ -278,6 +323,8 @@ const Chat = () => {
                               ? parseCitationFromMessage(answers[index - 1])
                               : [],
                         }}
+                        onSpeak={handleSpeech}
+                        isActive={activeCardIndex === index}
                         onCitationClicked={(c) => onShowCitation(c)}
                         index={index}
                       />
@@ -363,6 +410,7 @@ const Chat = () => {
               isListening={isListening}
               isRecognizing={isRecognizing}
               setRecognizedText={setRecognizedText}
+              isTextToSpeachActive = {isTextToSpeachActive}
             />
           </Stack>
         </div>
@@ -393,6 +441,7 @@ const Chat = () => {
       </Stack>
     </div>
   );
+
 };
 
 export default Chat;
