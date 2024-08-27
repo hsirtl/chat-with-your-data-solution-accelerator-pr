@@ -56,5 +56,5 @@ stages:
           az functionapp config container set \
             --name $(backendFunctionName) \
             --resource-group $(resourceGroupName) \
-            --docker-custom-image-name $(containerRegistry).azurecr.io/$(backendFunctionName):$(tag) \
-            --docker-registry-server-url https://$(containerRegistry).azurecr.io
+            --image $(containerRegistry).azurecr.io/$(backendFunctionName):$(tag) \
+            --registry-server https://$(containerRegistry).azurecr.io
