@@ -495,7 +495,7 @@ module containerRegistry './core/acr/containerregistry.bicep' = {
     name: containerRegistryName
     acrSku: 'Standard'
     zoneRedundancy: 'Disabled'
-    acrAdminUserEnabled: false
+    acrAdminUserEnabled: true
     publicNetworkAccess: 'Enabled'
     networkRuleBypassOptions: 'AzureServices'
     diagnosticWorkspaceId: ''
