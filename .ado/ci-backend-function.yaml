@@ -1,0 +1,60 @@
+# This workflow will deploy the infrastructure in ADO
+name: CI_Frontend
+
+trigger: none
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+    - code/frontend/**
+
+variables:
+  - group: "COYDSA-LZA-Infra"
+  # Container registry service connection established during pipeline creation
+  - name: 'containerRegistry'
+    value: 'acr2qc35pzaip4h2'
+  - name: 'dockerfilePath'
+    value: '$(Build.SourcesDirectory)/docker/Backend.Dockerfile'
+  - name: 'tag'
+    value: '$(Build.BuildId)'
+
+stages:
+- stage: Build
+  displayName: Build and push stage
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      name: $(buildAgentPool)
+    steps:
+    - task: AzureCLI@2
+      displayName: Build and push an image to container registry
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          echo "Logging in to ACR..."
+          az acr login --name $(containerRegistry)
+          echo "Building a new image..."
+          docker build --file $(dockerfilePath) --tag $(containerRegistry).azurecr.io/$(backendFunctionName):$(tag) $(Build.SourcesDirectory)
+          echo "Pushing the image to ACR..."
+          docker push $(containerRegistry).azurecr.io/$(backendFunctionName):$(tag)
+    - task: AzureCLI@2
+      displayName: 'Azure Function Container Deploy'
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          echo "Setting new container image for function: $(containerRegistry).azurecr.io/$(backendFunctionName):$(tag)"
+          echo "Logging in to ACR..."
+          az acr login --name $(containerRegistry)
+          az functionapp config container set \
+            --name $(backendFunctionName) \
+            --resource-group $(resourceGroupName) \
+            --docker-custom-image-name $(containerRegistry).azurecr.io/$(backendFunctionName):$(tag) \
+            --docker-registry-server-url https://$(containerRegistry).azurecr.io
