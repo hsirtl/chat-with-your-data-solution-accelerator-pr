@@ -43,7 +43,7 @@ param hostingPlanSku string = 'B3'
   'PremiumV2'
   'PremiumV3'
 ])
-param skuTier string = 'Basic'
+param skuTier string = 'Standard'
 
 @description('Name of Web App')
 param websiteName string = 'web-${resourceToken}'
