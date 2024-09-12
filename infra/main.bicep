@@ -72,11 +72,14 @@ param azureSearchTopK string = '5'
 @description('Enable in domain')
 param azureSearchEnableInDomain string = 'false'
 
+@description('Id columns')
+param azureSearchFieldId string = 'id'
+
 @description('Content columns')
-param azureSearchContentColumns string = 'content'
+param azureSearchContentColumn string = 'content'
 
 @description('Vector columns')
-param azureSearchVectorColumns string = 'content_vector'
+param azureSearchVectorColumn string = 'content_vector'
 
 @description('Filename column')
 param azureSearchFilenameColumn string = 'filename'
@@ -86,6 +89,18 @@ param azureSearchFilter string = ''
 
 @description('Title column')
 param azureSearchTitleColumn string = 'title'
+
+@description('Metadata column')
+param azureSearchFieldsMetadata string = 'metadata'
+
+@description('Source column')
+param azureSearchSourceColumn string = 'source'
+
+@description('Chunk column')
+param azureSearchChunkColumn string = 'chunk'
+
+@description('Offset column')
+param azureSearchOffsetColumn string = 'offset'
 
 @description('Url column')
 param azureSearchUrlColumn string = 'url'
@@ -576,11 +591,16 @@ module web './app/web.bicep' = if (hostingModel == 'code') {
       AZURE_SEARCH_INDEX_IS_PRECHUNKED: azureSearchIndexIsPrechunked
       AZURE_SEARCH_TOP_K: azureSearchTopK
       AZURE_SEARCH_ENABLE_IN_DOMAIN: azureSearchEnableInDomain
-      AZURE_SEARCH_CONTENT_COLUMNS: azureSearchContentColumns
-      AZURE_SEARCH_CONTENT_VECTOR_COLUMNS: azureSearchVectorColumns
       AZURE_SEARCH_FILENAME_COLUMN: azureSearchFilenameColumn
       AZURE_SEARCH_FILTER: azureSearchFilter
+      AZURE_SEARCH_FIELDS_ID: azureSearchFieldId
+      AZURE_SEARCH_CONTENT_COLUMN: azureSearchContentColumn
+      AZURE_SEARCH_CONTENT_VECTOR_COLUMN: azureSearchVectorColumn
       AZURE_SEARCH_TITLE_COLUMN: azureSearchTitleColumn
+      AZURE_SEARCH_FIELDS_METADATA: azureSearchFieldsMetadata
+      AZURE_SEARCH_SOURCE_COLUMN: azureSearchSourceColumn
+      AZURE_SEARCH_CHUNK_COLUMN: azureSearchChunkColumn
+      AZURE_SEARCH_OFFSET_COLUMN: azureSearchOffsetColumn
       AZURE_SEARCH_URL_COLUMN: azureSearchUrlColumn
       AZURE_SEARCH_USE_INTEGRATED_VECTORIZATION: azureSearchUseIntegratedVectorization
       AZURE_SPEECH_SERVICE_NAME: speechServiceName
@@ -654,11 +674,16 @@ module web_docker './app/web.bicep' = if (hostingModel == 'container') {
       AZURE_SEARCH_INDEX_IS_PRECHUNKED: azureSearchIndexIsPrechunked
       AZURE_SEARCH_TOP_K: azureSearchTopK
       AZURE_SEARCH_ENABLE_IN_DOMAIN: azureSearchEnableInDomain
-      AZURE_SEARCH_CONTENT_COLUMNS: azureSearchContentColumns
-      AZURE_SEARCH_CONTENT_VECTOR_COLUMNS: azureSearchVectorColumns
       AZURE_SEARCH_FILENAME_COLUMN: azureSearchFilenameColumn
       AZURE_SEARCH_FILTER: azureSearchFilter
+      AZURE_SEARCH_FIELDS_ID: azureSearchFieldId
+      AZURE_SEARCH_CONTENT_COLUMN: azureSearchContentColumn
+      AZURE_SEARCH_CONTENT_VECTOR_COLUMN: azureSearchVectorColumn
       AZURE_SEARCH_TITLE_COLUMN: azureSearchTitleColumn
+      AZURE_SEARCH_FIELDS_METADATA: azureSearchFieldsMetadata
+      AZURE_SEARCH_SOURCE_COLUMN: azureSearchSourceColumn
+      AZURE_SEARCH_CHUNK_COLUMN: azureSearchChunkColumn
+      AZURE_SEARCH_OFFSET_COLUMN: azureSearchOffsetColumn
       AZURE_SEARCH_URL_COLUMN: azureSearchUrlColumn
       AZURE_SEARCH_USE_INTEGRATED_VECTORIZATION: azureSearchUseIntegratedVectorization
       AZURE_SPEECH_SERVICE_NAME: speechServiceName
@@ -730,11 +755,16 @@ module adminweb './app/adminweb.bicep' = if (hostingModel == 'code') {
       AZURE_SEARCH_INDEX_IS_PRECHUNKED: azureSearchIndexIsPrechunked
       AZURE_SEARCH_TOP_K: azureSearchTopK
       AZURE_SEARCH_ENABLE_IN_DOMAIN: azureSearchEnableInDomain
-      AZURE_SEARCH_CONTENT_COLUMNS: azureSearchContentColumns
-      AZURE_SEARCH_CONTENT_VECTOR_COLUMNS: azureSearchVectorColumns
       AZURE_SEARCH_FILENAME_COLUMN: azureSearchFilenameColumn
       AZURE_SEARCH_FILTER: azureSearchFilter
+      AZURE_SEARCH_FIELDS_ID: azureSearchFieldId
+      AZURE_SEARCH_CONTENT_COLUMN: azureSearchContentColumn
+      AZURE_SEARCH_CONTENT_VECTOR_COLUMN: azureSearchVectorColumn
       AZURE_SEARCH_TITLE_COLUMN: azureSearchTitleColumn
+      AZURE_SEARCH_FIELDS_METADATA: azureSearchFieldsMetadata
+      AZURE_SEARCH_SOURCE_COLUMN: azureSearchSourceColumn
+      AZURE_SEARCH_CHUNK_COLUMN: azureSearchChunkColumn
+      AZURE_SEARCH_OFFSET_COLUMN: azureSearchOffsetColumn
       AZURE_SEARCH_URL_COLUMN: azureSearchUrlColumn
       AZURE_SEARCH_DATASOURCE_NAME: azureSearchDatasource
       AZURE_SEARCH_INDEXER_NAME: azureSearchIndexer
@@ -806,11 +836,16 @@ module adminweb_docker './app/adminweb.bicep' = if (hostingModel == 'container')
       AZURE_SEARCH_INDEX_IS_PRECHUNKED: azureSearchIndexIsPrechunked
       AZURE_SEARCH_TOP_K: azureSearchTopK
       AZURE_SEARCH_ENABLE_IN_DOMAIN: azureSearchEnableInDomain
-      AZURE_SEARCH_CONTENT_COLUMNS: azureSearchContentColumns
-      AZURE_SEARCH_CONTENT_VECTOR_COLUMNS: azureSearchVectorColumns
       AZURE_SEARCH_FILENAME_COLUMN: azureSearchFilenameColumn
       AZURE_SEARCH_FILTER: azureSearchFilter
+      AZURE_SEARCH_FIELDS_ID: azureSearchFieldId
+      AZURE_SEARCH_CONTENT_COLUMN: azureSearchContentColumn
+      AZURE_SEARCH_CONTENT_VECTOR_COLUMN: azureSearchVectorColumn
       AZURE_SEARCH_TITLE_COLUMN: azureSearchTitleColumn
+      AZURE_SEARCH_FIELDS_METADATA: azureSearchFieldsMetadata
+      AZURE_SEARCH_SOURCE_COLUMN: azureSearchSourceColumn
+      AZURE_SEARCH_CHUNK_COLUMN: azureSearchChunkColumn
+      AZURE_SEARCH_OFFSET_COLUMN: azureSearchOffsetColumn
       AZURE_SEARCH_URL_COLUMN: azureSearchUrlColumn
       AZURE_SEARCH_DATASOURCE_NAME: azureSearchDatasource
       AZURE_SEARCH_INDEXER_NAME: azureSearchIndexer
@@ -909,6 +944,14 @@ module function './app/function.bicep' = if (hostingModel == 'code') {
       AZURE_SEARCH_DATASOURCE_NAME: azureSearchDatasource
       AZURE_SEARCH_INDEXER_NAME: azureSearchIndexer
       AZURE_SEARCH_USE_INTEGRATED_VECTORIZATION: azureSearchUseIntegratedVectorization
+      AZURE_SEARCH_FIELDS_ID: azureSearchFieldId
+      AZURE_SEARCH_CONTENT_COLUMN: azureSearchContentColumn
+      AZURE_SEARCH_CONTENT_VECTOR_COLUMN: azureSearchVectorColumn
+      AZURE_SEARCH_TITLE_COLUMN: azureSearchTitleColumn
+      AZURE_SEARCH_FIELDS_METADATA: azureSearchFieldsMetadata
+      AZURE_SEARCH_SOURCE_COLUMN: azureSearchSourceColumn
+      AZURE_SEARCH_CHUNK_COLUMN: azureSearchChunkColumn
+      AZURE_SEARCH_OFFSET_COLUMN: azureSearchOffsetColumn
       USE_ADVANCED_IMAGE_PROCESSING: useAdvancedImageProcessing
       DOCUMENT_PROCESSING_QUEUE_NAME: queueName
       ORCHESTRATION_STRATEGY: orchestrationStrategy
@@ -969,6 +1012,14 @@ module function_docker './app/function.bicep' = if (hostingModel == 'container')
       AZURE_SEARCH_DATASOURCE_NAME: azureSearchDatasource
       AZURE_SEARCH_INDEXER_NAME: azureSearchIndexer
       AZURE_SEARCH_USE_INTEGRATED_VECTORIZATION: azureSearchUseIntegratedVectorization
+      AZURE_SEARCH_FIELDS_ID: azureSearchFieldId
+      AZURE_SEARCH_CONTENT_COLUMN: azureSearchContentColumn
+      AZURE_SEARCH_CONTENT_VECTOR_COLUMN: azureSearchVectorColumn
+      AZURE_SEARCH_TITLE_COLUMN: azureSearchTitleColumn
+      AZURE_SEARCH_FIELDS_METADATA: azureSearchFieldsMetadata
+      AZURE_SEARCH_SOURCE_COLUMN: azureSearchSourceColumn
+      AZURE_SEARCH_CHUNK_COLUMN: azureSearchChunkColumn
+      AZURE_SEARCH_OFFSET_COLUMN: azureSearchOffsetColumn
       USE_ADVANCED_IMAGE_PROCESSING: useAdvancedImageProcessing
       DOCUMENT_PROCESSING_QUEUE_NAME: queueName
       ORCHESTRATION_STRATEGY: orchestrationStrategy
@@ -1148,8 +1199,8 @@ output AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG string = azureSearchSemanticSearchCon
 output AZURE_SEARCH_INDEX_IS_PRECHUNKED string = azureSearchIndexIsPrechunked
 output AZURE_SEARCH_TOP_K string = azureSearchTopK
 output AZURE_SEARCH_ENABLE_IN_DOMAIN string = azureSearchEnableInDomain
-output AZURE_SEARCH_CONTENT_COLUMNS string = azureSearchContentColumns
-output AZURE_SEARCH_CONTENT_VECTOR_COLUMNS string = azureSearchVectorColumns
+output AZURE_SEARCH_CONTENT_COLUMN string = azureSearchContentColumn
+output AZURE_SEARCH_CONTENT_VECTOR_COLUMN string = azureSearchVectorColumn
 output AZURE_SEARCH_FILENAME_COLUMN string = azureSearchFilenameColumn
 output AZURE_SEARCH_FILTER string = azureSearchFilter
 output AZURE_SEARCH_TITLE_COLUMN string = azureSearchTitleColumn

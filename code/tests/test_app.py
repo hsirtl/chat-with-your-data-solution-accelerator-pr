@@ -22,8 +22,8 @@ AZURE_OPENAI_API_KEY = "mock-api-key"
 AZURE_SEARCH_KEY = "mock-search-key"
 AZURE_SEARCH_INDEX = "mock-search-index"
 AZURE_SEARCH_SERVICE = "mock-search-service"
-AZURE_SEARCH_CONTENT_COLUMNS = "field1|field2"
-AZURE_SEARCH_CONTENT_VECTOR_COLUMNS = "vector-column"
+AZURE_SEARCH_CONTENT_COLUMN = "field1|field2"
+AZURE_SEARCH_CONTENT_VECTOR_COLUMN = "vector-column"
 AZURE_SEARCH_TITLE_COLUMN = "title"
 AZURE_SEARCH_FILENAME_COLUMN = "filename"
 AZURE_SEARCH_URL_COLUMN = "url"
@@ -68,9 +68,9 @@ def env_helper_mock():
         env_helper.AZURE_OPENAI_STOP_SEQUENCE = AZURE_OPENAI_STOP_SEQUENCE
         env_helper.AZURE_SEARCH_INDEX = AZURE_SEARCH_INDEX
         env_helper.AZURE_SEARCH_SERVICE = AZURE_SEARCH_SERVICE
-        env_helper.AZURE_SEARCH_CONTENT_COLUMNS = AZURE_SEARCH_CONTENT_COLUMNS
-        env_helper.AZURE_SEARCH_CONTENT_VECTOR_COLUMNS = (
-            AZURE_SEARCH_CONTENT_VECTOR_COLUMNS
+        env_helper.AZURE_SEARCH_CONTENT_COLUMN = AZURE_SEARCH_CONTENT_COLUMN
+        env_helper.AZURE_SEARCH_CONTENT_VECTOR_COLUMN = (
+            AZURE_SEARCH_CONTENT_VECTOR_COLUMN
         )
         env_helper.AZURE_SEARCH_TITLE_COLUMN = AZURE_SEARCH_TITLE_COLUMN
         env_helper.AZURE_SEARCH_FILENAME_COLUMN = AZURE_SEARCH_FILENAME_COLUMN
@@ -110,6 +110,7 @@ class TestSpeechToken:
             "token": "speech-token",
             "region": AZURE_SPEECH_SERVICE_REGION,
             "languages": AZURE_SPEECH_RECOGNIZER_LANGUAGES,
+            "key": "mock-speech-key"
         }
 
         requests.post.assert_called_once_with(
@@ -153,6 +154,7 @@ class TestSpeechToken:
             "token": "speech-token",
             "region": AZURE_SPEECH_SERVICE_REGION,
             "languages": AZURE_SPEECH_RECOGNIZER_LANGUAGES,
+            "key": "mock-key1"
         }
 
         requests.post.assert_called_once_with(
@@ -617,7 +619,7 @@ class TestConversationAzureByod:
                             "index_name": AZURE_SEARCH_INDEX,
                             "fields_mapping": {
                                 "content_fields": ["field1", "field2"],
-                                "vector_fields": [AZURE_SEARCH_CONTENT_VECTOR_COLUMNS],
+                                "vector_fields": [AZURE_SEARCH_CONTENT_VECTOR_COLUMN],
                                 "title_field": AZURE_SEARCH_TITLE_COLUMN,
                                 "url_field": AZURE_SEARCH_URL_COLUMN,
                                 "filepath_field": AZURE_SEARCH_FILENAME_COLUMN,
