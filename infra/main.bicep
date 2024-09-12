@@ -31,7 +31,7 @@ param hostingPlanName string = 'hosting-plan-${resourceToken}'
   'P3'
   'P4'
 ])
-param hostingPlanSku string = 'B3'
+param hostingPlanSku string = 'S1'
 
 @description('The sku tier for the App Service plan')
 @allowed([
