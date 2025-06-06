@@ -28,8 +28,7 @@ param speechKeyName string = ''
 param authType string
 param dockerFullImageName string = ''
 param useDocker bool = dockerFullImageName != ''
-param containerRegistryName string = ''
-
+param databaseType string = 'CosmosDB' // 'CosmosDB' or 'PostgreSQL'
 
 module adminweb '../core/host/appservice.bicep' = {
   name: '${name}-app-module'
@@ -46,6 +45,7 @@ module adminweb '../core/host/appservice.bicep' = {
     scmDoBuildDuringDeployment: useDocker ? false : true
     applicationInsightsName: applicationInsightsName
     appServicePlanId: appServicePlanId
+    managedIdentity: databaseType == 'PostgreSQL' || !empty(keyVaultName)
     appSettings: union(appSettings, {
       AZURE_AUTH_TYPE: authType
       USE_KEY_VAULT: useKeyVault ? useKeyVault : ''
@@ -62,15 +62,17 @@ module adminweb '../core/host/appservice.bicep' = {
           ).key1
       AZURE_SEARCH_KEY: useKeyVault
         ? searchKeyName
-        : listAdminKeys(
-            resourceId(
-              subscription().subscriptionId,
-              resourceGroup().name,
-              'Microsoft.Search/searchServices',
-              azureAISearchName
-            ),
-            '2021-04-01-preview'
-          ).primaryKey
+        : (azureAISearchName != ''
+            ? listAdminKeys(
+                resourceId(
+                  subscription().subscriptionId,
+                  resourceGroup().name,
+                  'Microsoft.Search/searchServices',
+                  azureAISearchName
+                ),
+                '2021-04-01-preview'
+              ).primaryKey
+            : '')
       AZURE_BLOB_ACCOUNT_KEY: useKeyVault
         ? storageAccountKeyName
         : listKeys(
@@ -127,16 +129,6 @@ module adminweb '../core/host/appservice.bicep' = {
             '2023-05-01'
           ).key1
     })
-  }
-}
-
-// Container Registry pull permission
-// module acrPull '../core/security/registry-access.bicep' = if ((authType == 'rbac') && (useDocker)) {
-module acrPull '../core/security/registry-access.bicep' = if (useDocker) {
-  name: 'acrpull-role-admin'
-  params: {
-    principalId: adminweb.outputs.identityPrincipalId
-    containerRegistryName: containerRegistryName
   }
 }
 

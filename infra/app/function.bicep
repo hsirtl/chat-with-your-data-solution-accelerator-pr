@@ -27,9 +27,7 @@ param contentSafetyKeyName string = ''
 param speechKeyName string = ''
 param authType string
 param dockerFullImageName string = ''
-param useDocker bool = dockerFullImageName != ''
-param containerRegistryName string = ''
-
+param databaseType string
 
 module function '../core/host/functions.bicep' = {
   name: '${name}-app-module'
@@ -44,6 +42,8 @@ module function '../core/host/functions.bicep' = {
     runtimeName: runtimeName
     runtimeVersion: runtimeVersion
     dockerFullImageName: dockerFullImageName
+    useKeyVault: useKeyVault
+    managedIdentity: databaseType == 'PostgreSQL' || !empty(keyVaultName)
     appSettings: union(appSettings, {
       WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
       AZURE_AUTH_TYPE: authType
@@ -61,15 +61,17 @@ module function '../core/host/functions.bicep' = {
           ).key1
       AZURE_SEARCH_KEY: useKeyVault
         ? searchKeyName
-        : listAdminKeys(
-            resourceId(
-              subscription().subscriptionId,
-              resourceGroup().name,
-              'Microsoft.Search/searchServices',
-              azureAISearchName
-            ),
-            '2021-04-01-preview'
-          ).primaryKey
+        : (azureAISearchName != ''
+            ? listAdminKeys(
+                resourceId(
+                  subscription().subscriptionId,
+                  resourceGroup().name,
+                  'Microsoft.Search/searchServices',
+                  azureAISearchName
+                ),
+                '2021-04-01-preview'
+              ).primaryKey
+            : '')
       AZURE_BLOB_ACCOUNT_KEY: useKeyVault
         ? storageAccountKeyName
         : listKeys(
@@ -154,16 +156,6 @@ resource waitFunctionDeploymentSection 'Microsoft.Resources/deploymentScripts@20
   dependsOn: [
     function
   ]
-}
-
-// Container Registry pull permission
-// module acrPull '../core/security/registry-access.bicep' = if ((authType == 'rbac') && (useDocker)) {
-module acrPull '../core/security/registry-access.bicep' = if (useDocker) {
-  name: 'acrpull-role-function'
-  params: {
-    principalId: function.outputs.identityPrincipalId
-    containerRegistryName: containerRegistryName
-  }
 }
 
 // Cognitive Services User
