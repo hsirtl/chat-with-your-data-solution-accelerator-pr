@@ -1,4 +1,5 @@
 from os import path
+import re
 import streamlit as st
 import traceback
 import requests
@@ -48,6 +49,7 @@ def reprocess_all():
         else:
             st.error(f"Error: {response.text}")
     except Exception:
+        logger.error(traceback.format_exc())
         st.error(traceback.format_exc())
 
 
@@ -56,7 +58,17 @@ def add_urls():
     add_url_embeddings(urls)
 
 
+def sanitize_metadata_value(value):
+    # Remove invalid characters
+    return re.sub(r"[^a-zA-Z0-9-_ .]", "?", value)
+
+
 def add_url_embeddings(urls: list[str]):
+    has_valid_url = bool(list(filter(str.strip, urls)))
+    if not has_valid_url:
+        st.error("Please enter at least one valid URL.")
+        return
+
     params = {}
     if env_helper.FUNCTION_KEY is not None:
         params["code"] = env_helper.FUNCTION_KEY
@@ -89,11 +101,12 @@ try:
             for up in uploaded_files:
                 # To read file as bytes:
                 bytes_data = up.getvalue()
+                title = sanitize_metadata_value(up.name)
                 if st.session_state.get("filename", "") != up.name:
                     # Upload a new file
                     st.session_state["filename"] = up.name
                     st.session_state["file_url"] = blob_client.upload_file(
-                        bytes_data, up.name, metadata={"title": up.name}
+                        bytes_data, up.name, metadata={"title": title}
                     )
             if len(uploaded_files) > 0:
                 st.success(

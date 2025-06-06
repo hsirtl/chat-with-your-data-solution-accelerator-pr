@@ -4,6 +4,7 @@ param environmentName = readEnvironmentVariable('AZURE_ENV_NAME', 'env_name')
 param location = readEnvironmentVariable('AZURE_LOCATION', 'location')
 param principalId = readEnvironmentVariable('AZURE_PRINCIPAL_ID', '')
 
+
 // Please make sure to set this value to false when using rbac with AZURE_AUTH_TYPE
 param useKeyVault = bool(readEnvironmentVariable('USE_KEY_VAULT', 'true'))
 param authType = readEnvironmentVariable('AZURE_AUTH_TYPE', 'keys')
@@ -31,20 +32,20 @@ param azureSearchOffsetColumn = readEnvironmentVariable('AZURE_SEARCH_OFFSET_COL
 
 // OpenAI parameters
 param azureOpenAIApiVersion = readEnvironmentVariable('AZURE_OPENAI_API_VERSION', '2024-02-01')
-param azureOpenAIModel = readEnvironmentVariable('AZURE_OPENAI_MODEL', 'gpt-35-turbo-16k')
-param azureOpenAIModelName = readEnvironmentVariable('AZURE_OPENAI_MODEL_NAME', 'gpt-35-turbo-16k')
-param azureOpenAIModelVersion = readEnvironmentVariable('AZURE_OPENAI_MODEL_VERSION', '0613')
+param azureOpenAIModel = readEnvironmentVariable('AZURE_OPENAI_MODEL', 'gpt-4o')
+param azureOpenAIModelName = readEnvironmentVariable('AZURE_OPENAI_MODEL_NAME', 'gpt-4o')
+param azureOpenAIModelVersion = readEnvironmentVariable('AZURE_OPENAI_MODEL_VERSION', '2024-05-13')
 param azureOpenAIModelCapacity = int(readEnvironmentVariable('AZURE_OPENAI_MODEL_CAPACITY', '30'))
 param useAdvancedImageProcessing = bool(readEnvironmentVariable('USE_ADVANCED_IMAGE_PROCESSING', 'false'))
 param advancedImageProcessingMaxImages = int(readEnvironmentVariable('ADVANCED_IMAGE_PROCESSING_MAX_IMAGES', '1'))
 param azureOpenAIVisionModel = readEnvironmentVariable('AZURE_OPENAI_VISION_MODEL', 'gpt-4')
 param azureOpenAIVisionModelName = readEnvironmentVariable('AZURE_OPENAI_VISION_MODEL_NAME', 'gpt-4')
-param azureOpenAIVisionModelVersion = readEnvironmentVariable('AZURE_OPENAI_VISION_MODEL_VERSION', 'vision-preview')
+param azureOpenAIVisionModelVersion = readEnvironmentVariable('AZURE_OPENAI_VISION_MODEL_VERSION', 'turbo-2024-04-09')
 param azureOpenAIVisionModelCapacity = int(readEnvironmentVariable('AZURE_OPENAI_VISION_MODEL_CAPACITY', '10'))
-param azureOpenAIEmbeddingModelCapacity = int(readEnvironmentVariable('AZURE_OPENAI_EMBEDDING_MODEL_CAPACITY', '30'))
 param azureOpenAIEmbeddingModel = readEnvironmentVariable('AZURE_OPENAI_EMBEDDING_MODEL', 'text-embedding-ada-002')
 param azureOpenAIEmbeddingModelName = readEnvironmentVariable('AZURE_OPENAI_EMBEDDING_MODEL_NAME', 'text-embedding-ada-002')
 param azureOpenAIEmbeddingModelVersion = readEnvironmentVariable('AZURE_OPENAI_EMBEDDING_MODEL_VERSION', '2')
+param azureOpenAIEmbeddingModelCapacity = int(readEnvironmentVariable('AZURE_OPENAI_EMBEDDING_MODEL_CAPACITY', '30'))
 param azureOpenAIMaxTokens = readEnvironmentVariable('AZURE_OPENAI_MAX_TOKENS', '1000')
 param azureOpenAITemperature = readEnvironmentVariable('AZURE_OPENAI_TEMPERATURE', '0')
 param azureOpenAITopP = readEnvironmentVariable('AZURE_OPENAI_TOP_P', '1')

@@ -12,6 +12,7 @@ from utilities.search.search import Search
 bp_batch_push_results = func.Blueprint()
 logger = logging.getLogger(__name__)
 logger.setLevel(level=os.environ.get("LOGLEVEL", "INFO").upper())
+queue_name = os.environ.get("DOCUMENT_PROCESSING_QUEUE_NAME", "doc-processing")
 
 
 def _get_file_name_from_message(message_body) -> str:
@@ -24,23 +25,26 @@ def _get_file_name_from_message(message_body) -> str:
 
 
 @bp_batch_push_results.queue_trigger(
-    arg_name="msg", queue_name="doc-processing", connection="AzureWebJobsStorage"
+    arg_name="msg", queue_name=queue_name, connection="AzureWebJobsStorage"
 )
 def batch_push_results(msg: func.QueueMessage) -> None:
     message_body = json.loads(msg.get_body().decode("utf-8"))
-    logger.debug("Process Document Event queue function triggered: %s", message_body)
+    logger.info("Process Document Event queue function triggered: %s", message_body)
 
     event_type = message_body.get("eventType", "")
     # We handle "" in this scenario for backwards compatibility
     # This function is primarily triggered by an Event Grid queue message from the blob storage
     # However, it can also be triggered using a legacy schema from BatchStartProcessing
     if event_type in ("", "Microsoft.Storage.BlobCreated"):
+        logger.info("Handling 'Blob Created' event with message body: %s", message_body)
         _process_document_created_event(message_body)
 
     elif event_type == "Microsoft.Storage.BlobDeleted":
+        logger.info("Handling 'Blob Deleted' event with message body: %s", message_body)
         _process_document_deleted_event(message_body)
 
     else:
+        logger.exception("Received an unrecognized event type: %s", event_type)
         raise NotImplementedError(f"Unknown event type received: {event_type}")
 
 

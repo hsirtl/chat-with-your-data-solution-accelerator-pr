@@ -27,7 +27,7 @@ body = {
 @pytest.fixture(autouse=True)
 def completions_mocking(httpserver: HTTPServer, app_config: AppConfig):
     httpserver.expect_oneshot_request(
-        f"/openai/deployments/{app_config.get('AZURE_OPENAI_MODEL')}/chat/completions",
+        f"/openai/deployments/{app_config.get_from_json('AZURE_OPENAI_MODEL_INFO','model')}/chat/completions",
         method="POST",
     ).respond_with_json(
         {
@@ -48,7 +48,7 @@ def completions_mocking(httpserver: HTTPServer, app_config: AppConfig):
             ],
             "created": 1714576877,
             "id": "chatcmpl-9K63hMvVH1DyQJqqM7rFE4oRPFCeR",
-            "model": app_config.get("AZURE_OPENAI_MODEL"),
+            "model": app_config.get_from_json("AZURE_OPENAI_MODEL_INFO", "model"),
             "object": "chat.completion",
             "prompt_filter_results": [
                 {
@@ -72,7 +72,7 @@ def completions_mocking(httpserver: HTTPServer, app_config: AppConfig):
 
     httpserver.expect_oneshot_request(
         re.compile(
-            f"/openai/deployments/({app_config.get('AZURE_OPENAI_MODEL')}|{app_config.get('AZURE_OPENAI_VISION_MODEL')})/chat/completions"
+            f"/openai/deployments/({app_config.get_from_json('AZURE_OPENAI_MODEL_INFO','model')}|{app_config.get('AZURE_OPENAI_VISION_MODEL')})/chat/completions"
         ),
         method="POST",
     ).respond_with_json(
@@ -95,7 +95,7 @@ def completions_mocking(httpserver: HTTPServer, app_config: AppConfig):
             ],
             "created": 1714576891,
             "id": "chatcmpl-9K63vDGs3slJFynnpi2K6RcVPwgrT",
-            "model": app_config.get("AZURE_OPENAI_MODEL"),
+            "model": app_config.get_from_json("AZURE_OPENAI_MODEL_INFO", "model"),
             "object": "chat.completion",
             "prompt_filter_results": [
                 {
@@ -167,7 +167,7 @@ def test_post_responds_successfully(app_url: str, app_config: AppConfig):
         ],
         "created": "response.created",
         "id": "response.id",
-        "model": app_config.get("AZURE_OPENAI_MODEL"),
+        "model": app_config.get_from_json("AZURE_OPENAI_MODEL_INFO", "model"),
         "object": "response.object",
     }
     assert response.headers["Content-Type"] == "application/json"
@@ -245,7 +245,7 @@ def test_image_urls_included_in_call_to_openai(
                         "role": "system",
                     },
                     {
-                        "content": '## Retrieved Documents\n{"retrieved_documents":[{"[doc1]":{"content":"content"}}]}\n\n## User Question\nuser question',
+                        "content": '## Retrieved Documents\n{"retrieved_documents":[{"[doc1]":{"content":"content"}}]}\n\n## User Question\nUse the Retrieved Documents to answer the question: user question',
                         "name": "example_user",
                         "role": "system",
                     },
@@ -264,7 +264,7 @@ def test_image_urls_included_in_call_to_openai(
                         "content": [
                             {
                                 "type": "text",
-                                "text": '## Retrieved Documents\n{"retrieved_documents":[{"[doc1]":{"content":"content"}}]}\n\n## User Question\nWhat is the meaning of life?',
+                                "text": '## Retrieved Documents\n{"retrieved_documents":[{"[doc1]":{"content":"content"}}]}\n\n## User Question\nUse the Retrieved Documents to answer the question: What is the meaning of life?',
                             },
                             {"type": "image_url", "image_url": {"url": ANY}},
                         ],

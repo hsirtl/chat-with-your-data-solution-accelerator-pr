@@ -11,15 +11,15 @@ This document outlines the necessary steps and configurations required for setti
 - For a list of available models, see the [Microsoft Azure AI Services - OpenAI Models documentation](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models).
 
 ## Environment Variables (as listed in Azure AI Studio)
-- You can access the Environment Variables section of the `LOCAL_DEPLOYMENT.md` file by clicking on this link: [Environment Variables section in LOCAL_DEPLOYMENT.md](docs/LOCAL_DEPLOYMENT.md#environment-variables).
+- You can access the Environment Variables section of the `LOCAL_DEPLOYMENT.md` file by clicking on this link: [Environment Variables section in LOCAL_DEPLOYMENT.md](LOCAL_DEPLOYMENT.md#environment-variables).
 
 ### LLM
 - `AZURE_OPENAI_MODEL`: The Azure OpenAI Model Deployment Name
-    - example: `my-gpt-35-turbo-16k`
+    - example: `my-gpt-4o`
 - `AZURE_OPENAI_MODEL_NAME`: The Azure OpenAI Model Name
-    - example: `gpt-35-turbo-16k`
+    - example: `gpt-4o`
 - `AZURE_OPENAI_MODEL_VERSION`: The Azure OpenAI Model Version
-    - example: `0613`
+    - example: `2024-05-13`
 - `AZURE_OPENAI_MODEL_CAPACITY`: The Tokens per Minute Rate Limit (thousands)
     - example: `30`
 
@@ -29,7 +29,7 @@ This document outlines the necessary steps and configurations required for setti
 - `AZURE_OPENAI_VISION_MODEL_NAME`: The Azure OpenAI Model Name
     - example: `gpt-4`
 - `AZURE_OPENAI_VISION_MODEL_VERSION`: The Azure OpenAI Model Version
-    - example: `vision-preview`
+    - example: `turbo-2024-04-09`
 - `AZURE_OPENAI_VISION_MODEL_CAPACITY`: The Tokens per Minute Rate Limit (thousands)
     - example: `10`
 

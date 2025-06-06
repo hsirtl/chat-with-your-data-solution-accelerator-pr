@@ -8,21 +8,82 @@ import logging
 import mimetypes
 from os import path
 import sys
+import re
 import requests
 from openai import AzureOpenAI, Stream, APIStatusError
 from openai.types.chat import ChatCompletionChunk
 from flask import Flask, Response, request, Request, jsonify
 from dotenv import load_dotenv
+from urllib.parse import quote
 from backend.batch.utilities.helpers.env_helper import EnvHelper
+from backend.batch.utilities.helpers.azure_search_helper import AzureSearchHelper
 from backend.batch.utilities.helpers.orchestrator_helper import Orchestrator
 from backend.batch.utilities.helpers.config.config_helper import ConfigHelper
 from backend.batch.utilities.helpers.config.conversation_flow import ConversationFlow
+from backend.api.chat_history import bp_chat_history_response
 from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
 from azure.identity import DefaultAzureCredential
+from backend.batch.utilities.helpers.azure_blob_storage_client import (
+    AzureBlobStorageClient,
+)
 
 ERROR_429_MESSAGE = "We're currently experiencing a high number of requests for the service you're trying to access. Please wait a moment and try again."
 ERROR_GENERIC_MESSAGE = "An error occurred. Please try again. If the problem persists, please contact the site administrator."
 logger = logging.getLogger(__name__)
+
+
+def get_markdown_url(source, title, container_sas):
+    """Get Markdown URL for a citation"""
+
+    url = quote(source, safe=":/")
+    if "_SAS_TOKEN_PLACEHOLDER_" in url:
+        url = url.replace("_SAS_TOKEN_PLACEHOLDER_", container_sas)
+    return f"[{title}]({url})"
+
+
+def get_citations(citation_list):
+    """Returns Formated Citations."""
+    logger.info("Method get_citations started")
+    blob_client = AzureBlobStorageClient()
+    container_sas = blob_client.get_container_sas()
+    citations_dict = {"citations": []}
+    for citation in citation_list.get("citations"):
+        metadata = (
+            json.loads(citation["url"])
+            if isinstance(citation["url"], str)
+            else citation["url"]
+        )
+        title = citation["title"]
+        url = get_markdown_url(metadata["source"], title, container_sas)
+        citations_dict["citations"].append(
+            {
+                "content": url + "\n\n\n" + citation["content"],
+                "id": metadata["id"],
+                "chunk_id": (
+                    re.findall(r"\d+", metadata["chunk_id"])[-1]
+                    if metadata["chunk_id"] is not None
+                    else metadata["chunk"]
+                ),
+                "title": title,
+                "filepath": title.split("/")[-1],
+                "url": url,
+            }
+        )
+    logger.info("Method get_citations ended")
+    return citations_dict
+
+
+def should_use_data(
+    env_helper: EnvHelper, azure_search_helper: AzureSearchHelper
+) -> bool:
+    if (
+        env_helper.AZURE_SEARCH_SERVICE
+        and env_helper.AZURE_SEARCH_INDEX
+        and (env_helper.AZURE_SEARCH_KEY or env_helper.AZURE_AUTH_TYPE == "rbac")
+        and not azure_search_helper._index_not_exists(env_helper.AZURE_SEARCH_INDEX)
+    ):
+        return True
+    return False
 
 
 def stream_with_data(response: Stream[ChatCompletionChunk]):
@@ -67,8 +128,9 @@ def stream_with_data(response: Stream[ChatCompletionChunk]):
         role = delta.role
 
         if role == "assistant":
+            citations = get_citations(delta.model_extra["context"])
             response_obj["choices"][0]["messages"][0]["content"] = json.dumps(
-                delta.model_extra["context"],
+                citations,
                 ensure_ascii=False,
             )
         else:
@@ -79,20 +141,32 @@ def stream_with_data(response: Stream[ChatCompletionChunk]):
 
 def conversation_with_data(conversation: Request, env_helper: EnvHelper):
     """This function streams the response from Azure OpenAI with data."""
+    logger.info("Method conversation_with_data started")
     if env_helper.is_auth_type_keys():
+        logger.info("Using key-based authentication for Azure OpenAI")
         openai_client = AzureOpenAI(
             azure_endpoint=env_helper.AZURE_OPENAI_ENDPOINT,
             api_version=env_helper.AZURE_OPENAI_API_VERSION,
             api_key=env_helper.AZURE_OPENAI_API_KEY,
         )
     else:
+        logger.info("Using RBAC authentication for Azure OpenAI")
         openai_client = AzureOpenAI(
             azure_endpoint=env_helper.AZURE_OPENAI_ENDPOINT,
             api_version=env_helper.AZURE_OPENAI_API_VERSION,
             azure_ad_token_provider=env_helper.AZURE_TOKEN_PROVIDER,
         )
 
-    messages = conversation.json["messages"]
+    request_messages = conversation.json["messages"]
+    messages = []
+    config = ConfigHelper.get_active_config_or_default()
+    if config.prompts.use_on_your_data_format:
+        messages.append(
+            {"role": "system", "content": config.prompts.answering_system_prompt}
+        )
+
+    for message in request_messages:
+        messages.append({"role": message["role"], "content": message["content"]})
 
     # Azure OpenAI takes the deployment name as the model name, "AZURE_OPENAI_MODEL" means
     # deployment name.
@@ -135,7 +209,8 @@ def conversation_with_data(conversation: Request, env_helper: EnvHelper):
                                 env_helper.AZURE_SEARCH_CONTENT_VECTOR_COLUMN
                             ],
                             "title_field": env_helper.AZURE_SEARCH_TITLE_COLUMN or None,
-                            "url_field": env_helper.AZURE_SEARCH_URL_COLUMN or None,
+                            "url_field": env_helper.AZURE_SEARCH_FIELDS_METADATA
+                            or None,
                             "filepath_field": (
                                 env_helper.AZURE_SEARCH_FILENAME_COLUMN or None
                             ),
@@ -166,6 +241,7 @@ def conversation_with_data(conversation: Request, env_helper: EnvHelper):
     )
 
     if not env_helper.SHOULD_STREAM:
+        citations = get_citations(response.choices[0].message.model_extra["context"])
         response_obj = {
             "id": response.id,
             "model": response.model,
@@ -176,7 +252,7 @@ def conversation_with_data(conversation: Request, env_helper: EnvHelper):
                     "messages": [
                         {
                             "content": json.dumps(
-                                response.choices[0].message.model_extra["context"],
+                                citations,
                                 ensure_ascii=False,
                             ),
                             "end_turn": False,
@@ -194,10 +270,8 @@ def conversation_with_data(conversation: Request, env_helper: EnvHelper):
 
         return response_obj
 
-    return Response(
-        stream_with_data(response),
-        mimetype="application/json-lines",
-    )
+    logger.info("Method conversation_with_data ended")
+    return Response(stream_with_data(response), mimetype="application/json-lines")
 
 
 def stream_without_data(response: Stream[ChatCompletionChunk]):
@@ -327,6 +401,7 @@ def create_app():
 
     app = Flask(__name__)
     env_helper: EnvHelper = EnvHelper()
+    azure_search_helper: AzureSearchHelper = AzureSearchHelper()
 
     logger.debug("Starting web app")
 
@@ -340,8 +415,9 @@ def create_app():
         return "OK"
 
     def conversation_azure_byod():
+        logger.info("Method conversation_azure_byod started")
         try:
-            if env_helper.should_use_data():
+            if should_use_data(env_helper, azure_search_helper):
                 return conversation_with_data(request, env_helper)
             else:
                 return conversation_without_data(request, env_helper)
@@ -358,11 +434,14 @@ def create_app():
             error_message = str(e)
             logger.exception("Exception in /api/conversation | %s", error_message)
             return jsonify({"error": ERROR_GENERIC_MESSAGE}), 500
+        finally:
+            logger.info("Method conversation_azure_byod ended")
 
     async def conversation_custom():
         message_orchestrator = get_message_orchestrator()
 
         try:
+            logger.info("Method conversation_custom started")
             user_message = request.json["messages"][-1]["content"]
             conversation_id = request.json["conversation_id"]
             user_assistant_messages = list(
@@ -402,10 +481,14 @@ def create_app():
             error_message = str(e)
             logger.exception("Exception in /api/conversation | %s", error_message)
             return jsonify({"error": ERROR_GENERIC_MESSAGE}), 500
+        finally:
+            logger.info("Method conversation_custom ended")
 
     @app.route("/api/conversation", methods=["POST"])
     async def conversation():
-        conversation_flow = env_helper.CONVERSATION_FLOW
+        ConfigHelper.get_active_config_or_default.cache_clear()
+        result = ConfigHelper.get_active_config_or_default()
+        conversation_flow = result.prompts.conversational_flow
         if conversation_flow == ConversationFlow.CUSTOM.value:
             return await conversation_custom()
         elif conversation_flow == ConversationFlow.BYOD.value:
@@ -424,6 +507,7 @@ def create_app():
     def speech_config():
         """Get the speech config for Azure Speech."""
         try:
+            logger.info("Method speech_config started")
             speech_key = env_helper.AZURE_SPEECH_KEY or get_speech_key(env_helper)
 
             response = requests.post(
@@ -448,6 +532,8 @@ def create_app():
             logger.exception("Exception in /api/speech | %s", str(e))
 
             return {"error": "Failed to get speech config"}, 500
+        finally:
+            logger.info("Method speech_config ended")
 
     @app.route("/api/assistanttype", methods=["GET"])
     def assistanttype():
@@ -455,4 +541,10 @@ def create_app():
         result = ConfigHelper.get_active_config_or_default()
         return jsonify({"ai_assistant_type": result.prompts.ai_assistant_type})
 
+    @app.route("/api/checkauth", methods=["GET"])
+    async def check_auth_enforced():
+        """Check if the authentiction is enforced."""
+        return jsonify({"is_auth_enforced": env_helper.ENFORCE_AUTH})
+
+    app.register_blueprint(bp_chat_history_response, url_prefix="/api")
     return app

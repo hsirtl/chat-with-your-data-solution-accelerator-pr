@@ -12,7 +12,6 @@ import { HistoryButton } from "../../components/HistoryButton/HistoryButton";
 import { getUserInfo, checkAuthEnforced } from "../../api";
 import SpinnerComponent from '../../components/Spinner/Spinner';
 
-
 export type LayoutProps = {
     children: ReactNode;
     toggleSpinner: boolean;

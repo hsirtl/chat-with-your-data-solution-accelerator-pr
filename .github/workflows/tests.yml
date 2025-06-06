@@ -1,10 +1,10 @@
-name: Tests
+name: Test Workflow with Coverage
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev, demo]
   pull_request:
-    branches: [main]
+    branches: [main, dev, demo]
     types:
       - opened
       - ready_for_review
@@ -78,7 +78,7 @@ jobs:
 
           echo "MIN_COVERAGE=$MIN_COVERAGE" >> "$GITHUB_OUTPUT"
       - name: Run Python Tests
-        run: make python-test optional_args="--junitxml=coverage-junit.xml --cov=. --cov-report xml:coverage.xml --cov-fail-under ${{ steps.coverage-value.outputs.MIN_COVERAGE }}"
+        run: make python-test optional_args="--junitxml=coverage-junit.xml --cov=. --cov-report xml:coverage.xml --cov-fail-under ${{ steps.coverage-value.outputs.MIN_COVERAGE }} ./code/tests"
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:

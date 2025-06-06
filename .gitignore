@@ -5,6 +5,7 @@
 
 # generated frontend files
 code/dist/
+code/frontend/coverage
 
 # User-specific files
 *.rsuser
@@ -417,6 +418,8 @@ temp/
 # so that Azure App Service can install the dependencies
 requirements.txt
 !infra/prompt-flow/cwyd/requirements.txt
+!tests/e2e-test/requirements.txt
+!tests/llm-evaluator/requirements.txt
 
 # Cypress UI tests screenshots folder
 tests/integration/ui/cypress/screenshots/
@@ -426,3 +429,5 @@ tests/integration/ui/cypress/screenshots/
 
 #JetBrains IDE
 .idea/
+Pipfile
+Pipfile.lock

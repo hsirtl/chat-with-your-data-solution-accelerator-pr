@@ -19,7 +19,8 @@ def config_dict():
             "post_answering_prompt": "mock_post_answering_prompt",
             "enable_post_answering_prompt": False,
             "enable_content_safety": True,
-            "ai_assistant_type": "default"
+            "ai_assistant_type": "default",
+            "conversational_flow": "custom",
         },
         "messages": {
             "post_answering_filter": "mock_post_answering_filter",
@@ -64,6 +65,7 @@ def config_dict():
         "orchestrator": {
             "strategy": "langchain",
         },
+        "enable_chat_history": True,
     }
 
 
@@ -176,8 +178,10 @@ def test_default_config_is_cached():
     assert default_config_one is default_config_two
 
 
+@patch("backend.batch.utilities.helpers.config.config_helper.EnvHelper")
 def test_default_config_when_use_advanced_image_processing(env_helper_mock):
     # given
+    ConfigHelper._default_config = None
     env_helper_mock.return_value.USE_ADVANCED_IMAGE_PROCESSING = True
 
     # when
@@ -185,48 +189,39 @@ def test_default_config_when_use_advanced_image_processing(env_helper_mock):
 
     # then
     expected_chunking = {"strategy": "layout", "size": 500, "overlap": 100}
-    assert config["document_processors"] == [
+    expected_loading = {"strategy": "layout"}
+    expected_image_processor = {
+        "chunking": expected_chunking,
+        "loading": expected_loading,
+        "use_advanced_image_processing": True,
+    }
+
+    actual_processors = config["document_processors"]
+
+    expected_processors = [
+        {"document_type": "pdf", "chunking": expected_chunking, "loading": expected_loading},
+        {"document_type": "txt", "chunking": expected_chunking, "loading": {"strategy": "web"}},
+        {"document_type": "url", "chunking": expected_chunking, "loading": {"strategy": "web"}},
+        {"document_type": "md", "chunking": expected_chunking, "loading": {"strategy": "web"}},
+        {"document_type": "html", "chunking": expected_chunking, "loading": {"strategy": "web"}},
+        {"document_type": "htm", "chunking": expected_chunking, "loading": {"strategy": "web"}},
+        {"document_type": "docx", "chunking": expected_chunking, "loading": {"strategy": "docx"}},
         {
-            "document_type": "pdf",
-            "chunking": expected_chunking,
-            "loading": {"strategy": "layout"},
-        },
-        {
-            "document_type": "txt",
-            "chunking": expected_chunking,
+            "document_type": "json",
+            "chunking": {"strategy": "json", "size": 500, "overlap": 100},
             "loading": {"strategy": "web"},
         },
-        {
-            "document_type": "url",
-            "chunking": expected_chunking,
-            "loading": {"strategy": "web"},
-        },
-        {
-            "document_type": "md",
-            "chunking": expected_chunking,
-            "loading": {"strategy": "web"},
-        },
-        {
-            "document_type": "html",
-            "chunking": expected_chunking,
-            "loading": {"strategy": "web"},
-        },
-        {
-            "document_type": "htm",
-            "chunking": expected_chunking,
-            "loading": {"strategy": "web"},
-        },
-        {
-            "document_type": "docx",
-            "chunking": expected_chunking,
-            "loading": {"strategy": "docx"},
-        },
-        {"document_type": "jpeg", "use_advanced_image_processing": True},
-        {"document_type": "jpg", "use_advanced_image_processing": True},
-        {"document_type": "png", "use_advanced_image_processing": True},
-        {"document_type": "tiff", "use_advanced_image_processing": True},
-        {"document_type": "bmp", "use_advanced_image_processing": True},
+        {"document_type": "jpg", "chunking": expected_chunking, "loading": expected_loading},
+        {"document_type": "jpeg", "chunking": expected_chunking, "loading": expected_loading},
+        {"document_type": "png", "chunking": expected_chunking, "loading": expected_loading},
+        {"document_type": "jpeg", **expected_image_processor},
+        {"document_type": "jpg", **expected_image_processor},
+        {"document_type": "png", **expected_image_processor},
+        {"document_type": "tiff", **expected_image_processor},
+        {"document_type": "bmp", **expected_image_processor},
     ]
+
+    assert actual_processors == expected_processors
 
 
 def test_get_config_from_azure(
@@ -358,14 +353,22 @@ def test_get_default_contract_assistant():
     assert isinstance(contract_assistant_prompt, str)
 
 
+def test_get_default_employee_assistant():
+    # when
+    employee_assistant_prompt = ConfigHelper.get_default_employee_assistant()
+
+    # then
+    assert employee_assistant_prompt is not None
+    assert isinstance(employee_assistant_prompt, str)
+
+
 def test_get_document_processors(config_dict: dict):
     # given
     config_dict["document_processors"] = [
-        {"document_type": "jpg", "use_advanced_image_processing": True},
         {
             "document_type": "png",
-            "chunking": {"strategy": None, "size": None, "overlap": None},
-            "loading": {"strategy": None},
+            "chunking": {"strategy": "layout", "size": 500, "overlap": 100},
+            "loading": {"strategy": "read"},
             "use_advanced_image_processing": True,
         },
         {
@@ -386,15 +389,11 @@ def test_get_document_processors(config_dict: dict):
     # then
     assert config.document_processors == [
         EmbeddingConfig(
-            document_type="jpg",
-            chunking=None,
-            loading=None,
-            use_advanced_image_processing=True,
-        ),
-        EmbeddingConfig(
             document_type="png",
-            chunking=None,
-            loading=None,
+            chunking=ChunkingSettings(
+                {"strategy": "layout", "size": 500, "overlap": 100}
+            ),
+            loading=LoadingSettings({"strategy": "read"}),
             use_advanced_image_processing=True,
         ),
         EmbeddingConfig(
@@ -414,7 +413,7 @@ def test_get_available_document_types(config: Config):
 
     # then
     assert sorted(document_types) == sorted(
-        ["txt", "pdf", "url", "html", "htm", "md", "jpeg", "jpg", "png", "docx"]
+        ["txt", "pdf", "url", "html", "htm", "md", "jpeg", "jpg", "png", "docx", "json"]
     )
 
 
@@ -429,7 +428,21 @@ def test_get_available_document_types_when_advanced_image_processing_enabled(
 
     # then
     assert sorted(document_types) == sorted(
-        ["txt", "pdf", "url", "html", "htm", "md", "jpeg", "jpg", "png", "docx", "tiff", "bmp"]
+        [
+            "txt",
+            "pdf",
+            "url",
+            "html",
+            "htm",
+            "md",
+            "jpeg",
+            "jpg",
+            "png",
+            "docx",
+            "tiff",
+            "bmp",
+            "json"
+        ]
     )
 
 
@@ -452,6 +465,7 @@ def test_get_available_chunking_strategies(config: Config):
             "page",
             "fixed_size_overlap",
             "paragraph",
+            "json"
         ]
     )
 
